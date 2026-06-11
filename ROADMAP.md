@@ -1,33 +1,47 @@
 # Roadmap
 
-Bu yol haritasi, mevcut TA RSS uygulamasini server zorunlulugu olmayan, Railway destekli ve browser-first bir surume tasimak icin hazirlandi.
+Bu yol haritasi, mevcut TA RSS uygulamasini Railway destekli ve browser-first bir surume tasimak icin kullanilir. Projenin ilk calisan surumu canliya alinmistir; bundan sonraki calisma sertlestirme, UI parity iyilestirmeleri ve opsiyonel gelecek modlari uzerinden ilerler.
+
+Canli uygulama:
+
+https://ta-rss-production.up.railway.app
+
+## Durum Ozeti
+
+Tamamlanan ana fazlar:
+
+- Faz 0: Plan ve karar kaydi
+- Faz 1: Minimal Railway uygulama iskeleti
+- Faz 2: IndexedDB veri katmani
+- Faz 3: RSS kaynaklari ve Railway RSS proxy
+- Faz 4: AI skorlama proxy ve lokal fallback
+- Faz 5: Bulten hazirlama akisi
+- Faz 5.5: TA RSS workflow UI parity baslangici
+- Faz 6: EML uretimi
+- Faz 7: Railway deploy ve GitHub source baglantisi
+
+Aktif sonraki odak:
+
+- Faz 8: Sertlestirme
+- Faz 9: Opsiyonel Cloud Sync
+- Faz 10: Outlook Sender Companion
 
 ## Faz 0 - Plan ve Karar Kaydi
 
-Durum: Baslatildi
-
-Hedefler:
-
-- Yeni projenin hedef mimarisini netlestirmek.
-- Hangi ozelliklerin tasinacagini, hangilerinden vazgecilecegini yazmak.
-- Repo temizligini saglamak.
-- Ilk commit ile README ve yol haritasini GitHub'a gondermek.
+Durum: Tamamlandi
 
 Cikti:
 
 - `README.md`
 - `ROADMAP.md`
-- Temiz `.gitignore`
+- Temiz proje klasoru
+- GitHub repo: `berkanarin/tarss-railway`
 
 ## Faz 1 - Minimal Railway Uygulama Iskeleti
 
-Hedef:
+Durum: Tamamlandi
 
-- Tek repo icinde frontend ve backend iskeletini kurmak.
-- Railway'de calisabilecek minimal Node.js uygulamasi hazirlamak.
-- Lokal calistirma komutlarini netlestirmek.
-
-Plan:
+Cikti:
 
 - `package.json`
 - `src/server.js`
@@ -36,170 +50,198 @@ Plan:
 - `public/styles.css`
 - `GET /health`
 - Static frontend servis etme
-- Mevcut TA RSS arayuzunden renk, spacing, buton ve kart stillerini tasima icin UI envanteri cikarma
 
-Kabul kriteri:
+Kabul durumu:
 
-- `npm run dev` ile lokal uygulama acilir.
-- `/health` 200 doner.
-- Railway deploy icin temel dosyalar hazirdir.
+- `npm run dev` ile lokal uygulama aciliyor.
+- `/health` 200 donuyor.
+- Railway Node app olarak calisiyor.
 
 ## Faz 2 - IndexedDB Veri Katmani
 
-Hedef:
+Durum: Tamamlandi
 
-- Kullanici verisini tarayicida saklayan temel veri katmanini kurmak.
-
-Plan:
+Cikti:
 
 - IndexedDB wrapper
 - Store versiyonlama
 - Varsayilan ayarlar
+- Varsayilan kategoriler
 - JSON export/import
 - Veri sifirlama araci
 
-Kabul kriteri:
+Kabul durumu:
 
-- RSS kaynaklari tarayicida kaydedilir ve sayfa yenilenince kalir.
-- Ayarlar JSON olarak disa aktarilip geri yuklenebilir.
+- RSS kaynaklari ve ayarlar tarayicida kaydediliyor.
+- Sayfa yenilenince IndexedDB verisi korunuyor.
+- JSON yedek al/yukle akisi var.
 
 ## Faz 3 - RSS Kaynaklari ve Railway RSS Proxy
 
-Hedef:
+Durum: Tamamlandi
 
-- RSS kaynaklarini browser UI'dan yonetmek.
-- CORS sorunlarini Railway backend ile asmak.
-
-Plan:
+Cikti:
 
 - RSS kaynak ekle/sil/duzenle
-- `POST /api/rss/test`
+- Google News RSS URL olusturucu
 - `POST /api/rss/fetch`
 - Feed parse ve normalize
 - Kaynak bazli hata raporu
 
-Kabul kriteri:
+Kabul durumu:
 
-- Kullanici RSS kaynaklarini kaydeder.
-- "RSS cek" islemi haberleri IndexedDB'ye yazar.
-- CORS engelli feed'ler backend uzerinden cekilebilir.
+- Kullanici RSS kaynaklarini kaydediyor.
+- "RSS Cek" islemi haberleri IndexedDB'ye yaziyor.
+- CORS engelli feed'ler backend uzerinden cekilebiliyor.
+
+Not:
+
+- Ayrik `POST /api/rss/test` endpointi henuz yok; Google News test ve RSS cekme akisi simdilik `/api/rss/fetch` uzerinden calisiyor.
 
 ## Faz 4 - AI Skorlama Proxy
 
-Hedef:
+Durum: Tamamlandi
 
-- AI key'i frontend'e koymadan haber skorlamak.
+Cikti:
 
-Plan:
-
-- Railway env: `GEMINI_API_KEY` veya alternatif provider key
-- `POST /api/ai/score`
 - `POST /api/ai/score-batch`
+- Gemini REST entegrasyonu icin `GEMINI_API_KEY` / `GOOGLE_API_KEY` destegi
 - Kategori ve blacklist prompt tasarimi
-- Skor sonucunu IndexedDB `scoreCache` icine yazma
-- Kota/model/JSON parse hatalarini UI'da acik gostermek
+- AI key yokken lokal anahtar kelime fallback skorlama
+- Skor sonucunun haber kaydina yazilmasi
 
-Kabul kriteri:
+Kabul durumu:
 
-- Secili haber veya batch haberler skorlanir.
-- Skor cache tekrar cagriyi azaltir.
-- API hatalari sessizce yutulmaz.
+- Batch haberler skorlanabiliyor.
+- API key yokken ucundan uca test ve demo akisi bozulmuyor.
+- API hatalari UI toast mesaji olarak gorunuyor.
+
+Not:
+
+- Ayrik `POST /api/ai/score` endpointi henuz yok.
+- `scoreCache` store'u ayrildi, ancak cache optimizasyonu sertlestirme fazinda iyilestirilecek.
 
 ## Faz 5 - Bulten Hazirlama
 
-Hedef:
+Durum: Tamamlandi
 
-- Skorlanan haberlerden tek bulten taslagi olusturmak.
+Cikti:
 
-Plan:
-
-- Haber filtreleme ve siralama
-- Manuel secim
-- Kategori bazli gruplama
-- Bulten basligi, giris metni ve gorsel ayarlari
+- Haber filtreleme
+- Skor ve kaynak filtreleri
+- Haber secim akisi
+- Haber duzenleme modal'i
+- Secilenler sekmesi
+- Bulten basligi, mail konusu ve giris metni
 - HTML onizleme
 
-Kabul kriteri:
+Kabul durumu:
 
-- Kullanici bultene girecek haberleri secer.
-- Bulten onizlemesi tarayicida dogru gorunur.
+- Kullanici bultene girecek haberleri seciyor.
+- Duzenlenen haber secim ve bulten onizlemesine yansiyor.
+- Bulten onizlemesi tarayicida dogru uretiliyor.
 
 ## Faz 5.5 - UI Parity
 
-Hedef:
+Durum: Baslangic parity tamamlandi, ince ayar devam edecek
 
-- Railway surumunun mevcut TA RSS arayuzune mumkun oldugunca yakin hissettirmesini saglamak.
+Cikti:
 
-Plan:
+- Eski `TA RSS/admin.html` workflow kart modeli referans alindi.
+- Ana dashboard, workflow modal, sekmeler, kartlar, buton hiyerarsisi ve renk dili TA RSS'e yaklastirildi.
+- Kategoriler, RSS kaynaklari, Google News RSS, RSS haberleri, secilenler ve EML cikti adimlari eski zihinsel modele gore ayrildi.
 
-- Eski `admin.html` uzerinden renk paleti, kart yapilari ve workflow adimlarini referans almak
-- RSS kaynaklari, AI skorlama, secim ve bulten onizleme ekranlarini ayni zihinsel modelle tasarlamak
-- Kullanici metinlerini ve aksiyon adlarini mevcut uygulamayla uyumlu tutmak
+Kabul durumu:
 
-Kabul kriteri:
+- Kullanici temel akisi yeniden ogrenmeden tamamlayabilir.
 
-- Mevcut kullanici Railway surumunde temel akisi yeniden ogrenmeden tamamlayabilir.
+Devam edecek ince ayarlar:
+
+- Eski TA RSS'teki daha detayli bulten gorsel ayarlari
+- Manuel duyuru/egitim/haber ekleme
+- Secilenler icin daha zengin istatistik ve siralama secenekleri
+- Eski uygulamadaki mikro metin ve buton ikonlarinin daha fazla eslestirilmesi
 
 ## Faz 6 - EML Uretimi
 
-Hedef:
+Durum: Tamamlandi
 
-- Toplu gonderim yerine tek `.eml` dosyasi uretmek.
-
-Plan:
+Cikti:
 
 - MIME/EML builder
 - HTML body
 - Plain text fallback
-- Inline veya remote image stratejisi
 - `.eml` download
 
-Kabul kriteri:
+Kabul durumu:
 
-- Kullanici tek tikla `.eml` indirir.
-- EML Outlook'ta acilir ve manuel gonderime hazir olur.
+- Kullanici secili haberlerden tek `.eml` indiriyor.
+- EML Outlook'ta manuel acilabilecek formattadir.
+
+Gelecek iyilestirmeler:
+
+- Daha detayli Outlook render testi
+- Inline image veya guvenilir remote image stratejisi
+- Ek bulten sablonlari
 
 ## Faz 7 - Railway Deploy
 
-Hedef:
+Durum: Tamamlandi
 
-- Uygulamayi GitHub baglantili Railway auto deploy ile yayinlamak.
+Cikti:
 
-Plan:
+- Railway project: `Berkan Deploys`
+- Service: `TA RSS`
+- Repo source: `berkanarin/tarss-railway`
+- Branch: `main`
+- Production URL: https://ta-rss-production.up.railway.app
 
-- Railway projesini GitHub reposuna baglama
-- `main` branch auto deploy
-- Environment variables
-- Health check
-- Domain/URL dogrulama
+Son dogrulanan deploy:
 
-Kabul kriteri:
+- Commit: `4a7e9c0`
+- Mesaj: `Complete TA RSS browser workflow`
+- Deployment status: `SUCCESS`
 
-- Uygulama public Railway URL uzerinden acilir.
-- RSS ve AI proxy endpointleri Railway'de calisir.
-- GitHub `main` branch'e push sonrasi Railway deploy otomatik baslar.
+Kabul durumu:
+
+- Uygulama public Railway URL uzerinden aciliyor.
+- `/health` calisiyor.
+- RSS fetch ve AI score endpointleri canli Railway'de calisiyor.
+- GitHub source baglantisi `TA RSS` servisine bagli.
+
+Not:
+
+- Auto deploy tetiklenmediginde CLI ile source disconnect/connect yapilarak GitHub source yeniden baglandi ve deploy tetiklendi.
 
 ## Faz 8 - Sertlestirme
 
+Durum: Siradaki ana faz
+
 Hedef:
 
-- Gunluk kullanim icin hata toleransi ve veri guvenligini artirmak.
+- Gunluk kullanim icin hata toleransi, veri guvenligi ve UX netligini artirmak.
 
 Plan:
 
-- UI hata durumlari
-- Rate limit ve timeout yonetimi
+- RSS kaynak bazli hata raporunu UI'da daha belirgin gostermek
+- Rate limit, timeout ve retry politikalarini netlestirmek
+- AI skor cache kullanimini iyilestirmek
 - Import/export geri uyumlulugu
-- Basit telemetry/log
 - IndexedDB migration testleri
 - EML render testleri
+- Canli URL icin smoke test script'i
+- Log ve debug paneli
+- Google News test sonucundan kaynak kategori/dil/oncelik secerek ekleme
 
 Kabul kriteri:
 
 - Kullanici veri kaybetmeden surum guncelleyebilir.
 - RSS/AI hatalari anlasilir mesajlarla gorunur.
+- Uygulama gunde birden fazla RSS turunu stabil tasir.
 
 ## Faz 9 - Opsiyonel Cloud Sync
+
+Durum: Gelecek plan
 
 Hedef:
 
@@ -220,6 +262,8 @@ Kabul kriteri:
 - Cloud Sync, ilk surumun server'siz kullanim kolayligini bozmaz.
 
 ## Faz 10 - Outlook Sender Companion
+
+Durum: Gelecek plan
 
 Hedef:
 

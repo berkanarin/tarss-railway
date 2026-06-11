@@ -7,6 +7,7 @@ Railway tarafindaki backend kalici kullanici veritabani olmak yerine, tarayicini
 ## Hedef
 
 - Kullanici uygulama URL'sine girer.
+- Arayuz, mevcut TA RSS uygulamasinin gorsel dili ve is akisina yakin kalir; kullanici Railway surumune gecince farki minimum hisseder.
 - RSS kaynaklari, kategori ayarlari, blacklist, skor cache'i ve secimler tarayicidaki IndexedDB'de saklanir.
 - Railway backend RSS cekme, CORS engelini asma ve AI skorlama proxy gorevlerini ustlenir.
 - Gunun sonunda kullanici tek bir `.eml` bulten dosyasi indirir.
@@ -20,6 +21,17 @@ Bu proje iki parcadan olusacak:
 - Backend: Railway uzerinde calisan stateless API.
 
 Varsayilan veri sahipligi tarayicidadir. Backend kullanici RSS kaynaklarini, secimlerini veya bulten gecmisini kalici olarak tutmaz. Cihazlar arasi tasima icin JSON export/import akisi tasarlanir.
+
+Ileride ikinci bir mod eklenebilir:
+
+- Local Mode: IndexedDB, login yok, hizli kullanim.
+- Cloud Sync Mode: Railway DB ve kullanici yonetimi ile cihazlar arasi senkron.
+
+Cloud Sync Mode varsayilan degildir; eklendiginde auth, kullanici bazli veri izolasyonu, migration ve backup kararlari birlikte ele alinmalidir.
+
+## Arayuz Ilkesi
+
+Railway surumu, mevcut TA RSS admin arayuzunu referans alir. Renkler, kart yapisi, workflow adimlari, buton hiyerarsisi, dashboard hissi ve bulten hazirlama akisi korunur. Teknik altyapi degisse de kullanici ayni uygulamanin daha kolay acilan web surumunu kullandigini hissetmelidir.
 
 ## Kapsam
 
@@ -39,9 +51,13 @@ Kapsam disi:
 
 - Toplu mail gonderimi
 - Outlook otomasyonu
-- Kullanici hesabi ve cloud sync
+- Ilk surumde kullanici hesabi ve cloud sync
 - Server tarafinda kalici kullanici DB'si
 - Zamanlanmis otomatik calisma
+
+Gelecek tamamlayici arac:
+
+- Outlook Sender Companion: Web uygulamasinda uretilen `.eml` dosyasini ve alici listesini kullanarak, kullanicinin kendi Windows/Outlook ortaminda kisiye ozel toplu gonderim yapan ayri Python tabanli desktop helper.
 
 ## Veri Modeli
 
@@ -78,22 +94,19 @@ Backend stateless kalacagi icin isteklerde gerekli kaynak, kategori ve haber ver
 
 ## Lokal Gelistirme
 
-Bu README plan oncelikli ilk commit icindir. Uygulama iskeleti sonraki adimda eklenecek.
-
-Planlanan lokal calisma akisi:
+Lokal calisma akisi:
 
 ```powershell
 npm install
 npm run dev
 ```
 
-Railway deploy akisi:
+Railway deploy stratejisi:
 
-```powershell
-railway login
-railway link
-railway up
-```
+- Railway projesi GitHub reposuna baglanir.
+- `main` branch'e push sonrasi auto deploy calisir.
+- Environment variables Railway panelinden tanimlanir.
+- CLI sadece proje/servis kontrolu ve gerekirse log inceleme icin kullanilir.
 
 ## Repo
 

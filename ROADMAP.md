@@ -36,6 +36,7 @@ Plan:
 - `public/styles.css`
 - `GET /health`
 - Static frontend servis etme
+- Mevcut TA RSS arayuzunden renk, spacing, buton ve kart stillerini tasima icin UI envanteri cikarma
 
 Kabul kriteri:
 
@@ -123,6 +124,22 @@ Kabul kriteri:
 - Kullanici bultene girecek haberleri secer.
 - Bulten onizlemesi tarayicida dogru gorunur.
 
+## Faz 5.5 - UI Parity
+
+Hedef:
+
+- Railway surumunun mevcut TA RSS arayuzune mumkun oldugunca yakin hissettirmesini saglamak.
+
+Plan:
+
+- Eski `admin.html` uzerinden renk paleti, kart yapilari ve workflow adimlarini referans almak
+- RSS kaynaklari, AI skorlama, secim ve bulten onizleme ekranlarini ayni zihinsel modelle tasarlamak
+- Kullanici metinlerini ve aksiyon adlarini mevcut uygulamayla uyumlu tutmak
+
+Kabul kriteri:
+
+- Mevcut kullanici Railway surumunde temel akisi yeniden ogrenmeden tamamlayabilir.
+
 ## Faz 6 - EML Uretimi
 
 Hedef:
@@ -146,13 +163,13 @@ Kabul kriteri:
 
 Hedef:
 
-- Uygulamayi Railway uzerinde yayinlamak.
+- Uygulamayi GitHub baglantili Railway auto deploy ile yayinlamak.
 
 Plan:
 
-- Railway proje linkleme
+- Railway projesini GitHub reposuna baglama
+- `main` branch auto deploy
 - Environment variables
-- Deploy komutu
 - Health check
 - Domain/URL dogrulama
 
@@ -160,6 +177,7 @@ Kabul kriteri:
 
 - Uygulama public Railway URL uzerinden acilir.
 - RSS ve AI proxy endpointleri Railway'de calisir.
+- GitHub `main` branch'e push sonrasi Railway deploy otomatik baslar.
 
 ## Faz 8 - Sertlestirme
 
@@ -180,3 +198,55 @@ Kabul kriteri:
 
 - Kullanici veri kaybetmeden surum guncelleyebilir.
 - RSS/AI hatalari anlasilir mesajlarla gorunur.
+
+## Faz 9 - Opsiyonel Cloud Sync
+
+Hedef:
+
+- IndexedDB varsayilanini bozmadan, isteyen kullanicilar icin Railway DB tabanli hesapli mod eklemek.
+
+Plan:
+
+- Railway Postgres veya uygun Railway DB servisini secmek
+- Kullanici yonetimi ve session mimarisi belirlemek
+- Kullanici bazli RSS kaynaklari, ayarlar, kategoriler, blacklist ve skor cache saklamak
+- Local Mode ile Cloud Sync Mode arasinda export/import veya sync akisi tasarlamak
+- Veri izolasyonu, backup, migration ve silme politikalarini netlestirmek
+
+Kabul kriteri:
+
+- Login olan kullanici farkli cihazdan kendi ayarlarini gorebilir.
+- Login olmayan kullanici Local Mode ile uygulamayi kullanmaya devam edebilir.
+- Cloud Sync, ilk surumun server'siz kullanim kolayligini bozmaz.
+
+## Faz 10 - Outlook Sender Companion
+
+Hedef:
+
+- Railway web uygulamasini toplu gonderim karmasikligindan uzak tutarken, ihtiyac duyan kullanicilar icin Windows/Outlook uzerinden kisiye ozel gonderim yapan ayri bir helper sunmak.
+
+Fikir:
+
+- Kullanici Railway web uygulamasinda bulteni hazirlar ve `.eml` olarak indirir.
+- Kullanici ayri Python tabanli desktop helper'i acar.
+- Helper `.eml` dosyasini import eder.
+- Kullanici Excel/CSV alici listesini yukler.
+- Helper Outlook COM uzerinden her alici icin isme ozel mail olusturur ve gonderir veya taslak olarak kaydeder.
+
+Plan:
+
+- `.eml` parse ve HTML body okuma
+- Excel/CSV alici listesi import
+- Kisiye ozel alanlar: ad, soyad, e-posta, opsiyonel segment
+- Outlook COM entegrasyonu
+- Test gonderimi
+- Taslak olusturma modu
+- Gonderim raporu CSV
+- Hata durumunda kaldigi yerden devam etme
+
+Kabul kriteri:
+
+- Web uygulamasi toplu gonderim ozelligi tasimaz.
+- Helper, kullanicinin kendi Outlook hesabindan kisiye ozel gonderim yapabilir.
+- Kullanicinin EML ve alici listesi lokal makinede kalir.
+- Gonderim oncesi test ve taslak modu vardir.

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TA RSS Railway Version</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">TA RSS</p>
+          <h1>Railway Version</h1>
+        </div>
+        <div class="status-pill" id="healthStatus">Kontrol ediliyor</div>
+      </header>
+
+      <section class="summary">
+        <div>
+          <h2>Browser-first bulten uretimi</h2>
+          <p>Bu iskelet, IndexedDB merkezli RSS bulten aracinin Railway uzerinde yayinlanacak yeni surumu icin baslangic ekranidir.</p>
+        </div>
+        <button id="checkHealth" type="button">Health Check</button>
+      </section>
+
+      <section class="grid" aria-label="Planlanan ana moduller">
+        <article>
+          <h3>IndexedDB</h3>
+          <p>RSS kaynaklari, ayarlar, skor cache'i ve secimler tarayicida saklanacak.</p>
+        </article>
+        <article>
+          <h3>RSS Proxy</h3>
+          <p>Railway backend CORS engelli RSS kaynaklarini cekmek icin araci olacak.</p>
+        </article>
+        <article>
+          <h3>AI Proxy</h3>
+          <p>API key frontend'e yazilmadan haber skorlama backend uzerinden yapilacak.</p>
+        </article>
+        <article>
+          <h3>EML Export</h3>
+          <p>Secilen haberlerden tek bir EML dosyasi tarayicida uretilecek.</p>
+        </article>
+      </section>
+    </section>
+  </main>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

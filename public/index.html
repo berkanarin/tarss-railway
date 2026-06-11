@@ -61,7 +61,7 @@
             </section>
 
             <section class="workflow-grid" aria-label="Bulten hazirlama adimlari">
-              <button class="workflow-card" data-open-page="data" data-step-card="1" type="button" title="Kategori, oncelik, anahtar kelime ve yedekleme ayarlarini duzenle">
+              <button class="workflow-card" data-open-page="categories" data-step-card="1" type="button" title="Kategori, oncelik, anahtar kelime ve yasakli kelime kurallarini duzenle">
                 <span class="step-check"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"></path></svg></span>
                 <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10"></path><path d="M4 12h16"></path><path d="M4 18h10"></path><circle cx="17" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="17" cy="18" r="2"></circle></svg></span>
                 <span class="step-eyebrow">1. Adim</span>
@@ -98,64 +98,196 @@
           </div>
         </section>
 
-        <section class="page" id="page-sources">
+        <section class="page" id="page-categories">
           <article class="card">
-            <h3>RSS Kaynagi Ekle</h3>
-            <form class="source-form" id="sourceForm">
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Kaynak Adi</label>
-                  <input id="sourceName" required placeholder="Orn. Webrazzi">
-                </div>
-                <div class="form-group">
-                  <label>Kategori</label>
-                  <input id="sourceCategory" placeholder="Orn. tech">
-                </div>
+            <div class="card-head">
+              <h3>AI Skorlama Kategorileri</h3>
+              <div class="row-actions">
+                <button class="btn btn-sm btn-red" id="deleteSelectedCategories" type="button">Secilenleri Sil</button>
+                <button class="btn btn-sm btn-primary" id="addCategory" type="button">+ Kategori Ekle</button>
+                <button class="btn btn-sm btn-green" id="saveCategories" type="button">Kaydet</button>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:10px">AI skorlama sirasinda haberler bu kategorilere gore degerlendirilir. Oncelik ve anahtar kelimeleri ozellestirebilirsiniz. Degisiklikleri Kaydet ile onaylayin.</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:30px"><input type="checkbox" id="catCheckAll"></th>
+                    <th style="width:210px">Kategori</th>
+                    <th style="width:120px">Oncelik</th>
+                    <th>Anahtar Kelimeler</th>
+                    <th style="width:60px"></th>
+                  </tr>
+                </thead>
+                <tbody id="categoriesBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="page" id="page-blacklist">
+          <article class="card">
+            <div class="card-head">
+              <h3>Yasakli Kelimeler</h3>
+              <span id="blacklistCount"></span>
+            </div>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Bu kelimeler AI skorlama sirasinda negatif etki yapar. Her satira bir kelime veya ifade yazin.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Rakip Firmalar</label>
+                <textarea id="blacklistCompetitors" rows="8" placeholder="Her satira bir kelime veya ifade yazin..."></textarea>
               </div>
               <div class="form-group">
-                <label>RSS URL</label>
-                <input id="sourceUrl" required type="url" placeholder="https://example.com/feed/">
+                <label>Yasakli/Uygunsuz Kelimeler</label>
+                <textarea id="blacklistBanned" rows="8" placeholder="Her satira bir kelime veya ifade yazin..."></textarea>
               </div>
-              <div class="form-actions">
-                <button class="btn btn-primary" type="submit">Kaydet</button>
-                <button class="btn btn-ghost" id="clearSourceForm" type="button">Temizle</button>
-              </div>
-            </form>
+            </div>
+            <div class="form-group">
+              <label>Istenmeyen Konular</label>
+              <textarea id="blacklistTopics" rows="4" placeholder="Orn: kumar, bahis, kripto dolandiriciligi..."></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" id="saveBlacklist" type="button">Kaydet</button>
+              <span id="blacklistSaved" style="font-size:12px;color:var(--green);display:none">Kaydedildi</span>
+            </div>
           </article>
+        </section>
 
+        <section class="page" id="page-sources">
           <article class="card">
             <div class="card-head">
               <h3>RSS Kaynaklari</h3>
-              <span id="sourceCount">0 kaynak</span>
+              <div class="row-actions">
+                <button class="btn btn-sm btn-red" id="deleteSelectedSources" type="button">Secilenleri Sil</button>
+                <button class="btn btn-sm btn-primary" id="addSource" type="button">+ Kaynak Ekle</button>
+                <button class="btn btn-sm btn-green" id="saveSources" type="button">Kaydet</button>
+              </div>
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
+                    <th style="width:30px"><input type="checkbox" id="srcCheckAll"></th>
                     <th>Kaynak</th>
-                    <th>Kategori</th>
                     <th>URL</th>
+                    <th>Kategori</th>
+                    <th>Dil</th>
+                    <th>Oncelik</th>
                     <th></th>
                   </tr>
                 </thead>
-                <tbody id="sourcesTable"></tbody>
+                <tbody id="sourcesBody"></tbody>
               </table>
+            </div>
+            <div class="form-actions" style="justify-content:flex-end;margin-top:10px">
+              <span id="sourceCount" style="font-size:12px;color:var(--text2)">0 kaynak</span>
             </div>
             <div class="empty-state" id="sourcesEmpty">Henuz RSS kaynagi eklenmedi.</div>
           </article>
         </section>
 
+        <section class="page" id="page-gnews">
+          <article class="card">
+            <h3>Google News RSS Olusturucu</h3>
+            <p>Google News uzerinden belirli bir site ve anahtar kelimeler ile RSS beslemesi olusturun. Test basarili olursa dogrudan RSS kaynaklarina ekleyebilirsiniz.</p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Site Alan Adi</label>
+                <input id="gnewsSite" placeholder="orn: webrazzi.com">
+              </div>
+              <div class="form-group">
+                <label>Anahtar Kelimeler</label>
+                <input id="gnewsKeywords" placeholder="orn: yapay zeka">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Dil / Bolge</label>
+              <select id="gnewsLang">
+                <option value="tr|TR|TR:tr" selected>Turkce (Turkiye)</option>
+                <option value="en|US|US:en">English (US)</option>
+                <option value="en|GB|GB:en">English (UK)</option>
+                <option value="de|DE|DE:de">Deutsch</option>
+                <option value="fr|FR|FR:fr">Francais</option>
+              </select>
+            </div>
+            <div class="url-preview" id="gnewsUrlPreview">URL burada gorunecek...</div>
+            <div class="form-actions">
+              <button class="btn btn-primary" id="buildGnewsUrl" type="button">URL Olustur</button>
+              <button class="btn btn-orange" id="testGnewsUrl" type="button">Test Et</button>
+              <button class="btn btn-green" id="addGnewsToSources" type="button" style="display:none">Kaynaklara Ekle</button>
+              <span id="gnewsStatus" style="font-size:12px;color:var(--text2)"></span>
+            </div>
+          </article>
+          <article class="card" id="gnewsResults" style="display:none">
+            <h3>Test Sonuclari</h3>
+            <div id="gnewsResultInfo" style="font-size:12px;color:var(--text2);margin-bottom:10px"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>#</th><th>Baslik</th><th>Tarih</th><th>Kaynak</th></tr>
+                </thead>
+                <tbody id="gnewsResultBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
         <section class="page" id="page-articles">
           <article class="card">
-            <h3>RSS Haberleri</h3>
-            <p>Bu alan Faz 3 ile Railway RSS proxy ve haber listesi icin doldurulacak.</p>
+            <div class="filter-bar">
+              <select id="filterCategory"><option value="">Tum Kategoriler</option></select>
+              <select id="filterSource"><option value="">Tum Kaynaklar</option></select>
+              <select id="filterScore">
+                <option value="0">Tum Skorlar</option>
+                <option value="7">7+ Skor</option>
+                <option value="5">5+ Skor</option>
+              </select>
+              <input type="text" id="filterSearch" placeholder="Ara...">
+              <div class="spacer"></div>
+              <button class="btn btn-sm btn-ghost" id="clearFilters" type="button">Filtreleri Temizle</button>
+            </div>
+            <div id="articleList" class="article-list"></div>
+            <div class="empty-state" id="articlesEmpty">Henuz haber yok. RSS Cek ile kaynaklardan haberleri alin.</div>
+          </article>
+        </section>
+
+        <section class="page" id="page-selected">
+          <article class="card">
+            <div class="card-head">
+              <h3>Secilen Icerikler</h3>
+              <span id="selectedCount">0 secim</span>
+            </div>
+            <div id="selectedList" class="article-list"></div>
+            <div class="empty-state" id="selectedEmpty">Henuz secili icerik yok.</div>
           </article>
         </section>
 
         <section class="page" id="page-send">
           <article class="card">
-            <h3>EML Ciktisi</h3>
-            <p>Bu alan Faz 6 ile tek EML dosyasi uretimi icin doldurulacak.</p>
+            <h3>Bulten Ayarlari ve EML Ciktisi</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Bulten Basligi</label>
+                <input id="bulletinTitle" value="TA RSS Bulteni">
+              </div>
+              <div class="form-group">
+                <label>Mail Konusu</label>
+                <input id="mailSubject" value="TA RSS Bulteni">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Giris Metni</label>
+              <textarea id="introText" rows="3">Secilmis icerikler ve haftanin one cikan gelismeleri asagida seni bekliyor.</textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" id="previewBulletin" type="button">Onizleme Olustur</button>
+              <button class="btn btn-green" id="downloadEml" type="button">EML Indir</button>
+            </div>
+          </article>
+          <article class="card">
+            <h3>Onizleme</h3>
+            <div id="bulletinPreview" class="bulletin-preview"></div>
           </article>
         </section>
 
@@ -200,6 +332,57 @@
       <div class="workflow-fetch-line" id="workflowFetchLine"></div>
       <div class="workflow-tabs" id="workflowModalTabs"></div>
       <div class="workflow-modal-body" id="workflowModalBody"></div>
+    </div>
+  </div>
+
+  <div class="edit-modal" id="articleEditModal" aria-hidden="true">
+    <div class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="articleEditTitle">
+      <div class="workflow-dialog-head">
+        <div class="workflow-dialog-title">
+          <span>Haber</span>
+          <h2 id="articleEditTitle">RSS Icerigini Duzenle</h2>
+          <p>Baslik, ozet, gorsel, kategori ve skorlama alanlarini bultene girmeden once duzenleyin.</p>
+        </div>
+        <button class="panel-close" id="closeArticleEdit" type="button" aria-label="Kapat">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <form id="articleEditForm" class="edit-body">
+        <input type="hidden" id="editArticleId">
+        <div class="form-group">
+          <label>Baslik</label>
+          <input id="editArticleTitle" required>
+        </div>
+        <div class="form-group">
+          <label>Ozet</label>
+          <textarea id="editArticleSummary" rows="5"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>URL</label>
+            <input id="editArticleUrl" type="url">
+          </div>
+          <div class="form-group">
+            <label>Gorsel URL</label>
+            <input id="editArticleImage">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kategoriler</label>
+            <input id="editArticleCategories" placeholder="Virgulle ayirin">
+          </div>
+          <div class="form-group">
+            <label>Skor</label>
+            <input id="editArticleScore" type="number" min="0" max="10" step="0.1">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Kaydet</button>
+          <button class="btn btn-red" id="deleteArticle" type="button">Haberi Sil</button>
+          <button class="btn btn-ghost" id="cancelArticleEdit" type="button">Vazgec</button>
+        </div>
+      </form>
     </div>
   </div>
 

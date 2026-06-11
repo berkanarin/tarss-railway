@@ -101,8 +101,17 @@ export async function seedDefaults() {
   if (settingsCount === 0) {
     await putItem('settings', {
       id: 'app',
-      bulletinTitle: 'TA RSS Bulteni',
-      introText: 'Secilmis icerikler ve haftanin one cikan gelismeleri.',
+      bulletinTitle: 'RSS Bulteni',
+      bulletinDate: '',
+      mailSubject: 'RSS Bulteni',
+      mailFrom: '',
+      introText: 'Sana ozel hazirlanan secilmis icerikler ve haftanin one cikan gelismeleri asagida seni bekliyor.',
+      layoutOrder: 'global_first',
+      useTranslateLinks: false,
+      showLabels: true,
+      defaultImageUrl: '',
+      bannerImageUrl: '',
+      bulletinStyle: 'single',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });

@@ -10,6 +10,7 @@ import {
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const MAIL_SAFE_DEFAULT_IMAGE = 'https://dummyimage.com/600x360/f3f6fb/1c3a8c.png&text=TA+RSS';
 
 const state = {
   sources: [],
@@ -113,9 +114,19 @@ async function loadState() {
 
   const settings = settingsRows.find((item) => item.id === 'app');
   if (settings) {
-    $('#bulletinTitle').value = settings.bulletinTitle || 'TA RSS Bulteni';
-    $('#mailSubject').value = settings.mailSubject || settings.bulletinTitle || 'TA RSS Bulteni';
-    $('#introText').value = settings.introText || '';
+    $('#sendBulletinTitle').value = settings.bulletinTitle || settings.bulletin_title || 'RSS Bulteni';
+    $('#sendSubject').value = settings.mailSubject || settings.mail_subject || settings.bulletinTitle || 'RSS Bulteni';
+    $('#sendIntro').value = settings.introText || settings.intro_text || '';
+    $('#sendBulletinDate').value = settings.bulletinDate || settings.bulletin_date || '';
+    $('#sendFrom').value = settings.mailFrom || settings.mail_from || '';
+    $('#settingLayout').value = settings.layoutOrder || settings.layout_order || 'global_first';
+    $('#settingTranslate').value = String(settings.useTranslateLinks ?? settings.use_translate_links ?? false);
+    $('#settingShowLabels').checked = settings.showLabels ?? settings.show_labels ?? true;
+    $('#sendDefaultImage').value = settings.defaultImageUrl || settings.default_image_url || '';
+    $('#sendBannerImage').value = settings.bannerImageUrl || settings.banner_image_url || '';
+    selectBulletinStyle(settings.bulletinStyle || settings.bulletin_style || 'single');
+    updateDefaultImagePreview();
+    updateBannerPreview();
   }
 }
 
@@ -627,27 +638,290 @@ async function deleteCurrentArticle() {
   toast('Haber silindi.', 'success');
 }
 
+function truncateText(value, maxLength) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
+}
+
+function formatBulletinDate(value) {
+  if (value && value.trim()) return value.trim();
+  const months = ['Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran', 'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik'];
+  const now = new Date();
+  return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+}
+
+function getSelectedBulletinStyle() {
+  return document.querySelector('input[name="bulletinStyle"]:checked')?.value || 'single';
+}
+
+function selectBulletinStyle(style) {
+  const safeStyle = style === 'double' ? 'double' : 'single';
+  $$('input[name="bulletinStyle"]').forEach((input) => {
+    input.checked = input.value === safeStyle;
+  });
+  $$('[data-style-option]').forEach((option) => {
+    option.classList.toggle('active', option.dataset.styleOption === safeStyle);
+  });
+}
+
+function updateDefaultImagePreview() {
+  const url = $('#sendDefaultImage')?.value.trim();
+  const preview = $('#defaultImagePreview');
+  const img = $('#defaultImagePreviewImg');
+  if (!preview || !img) return;
+  if (url) {
+    img.src = url;
+    preview.style.display = 'block';
+  } else {
+    img.removeAttribute('src');
+    preview.style.display = 'none';
+  }
+}
+
+function updateBannerPreview() {
+  const url = $('#sendBannerImage')?.value.trim();
+  const preview = $('#bannerPreview');
+  const img = $('#bannerPreviewImg');
+  if (!preview || !img) return;
+  if (url) {
+    img.src = url;
+    preview.style.display = 'block';
+  } else {
+    img.removeAttribute('src');
+    preview.style.display = 'none';
+  }
+}
+
+function wrapTranslateUrl(url, language, enabled) {
+  if (!url || !enabled || String(language || 'tr').toLowerCase().startsWith('tr')) return url || '#';
+  return `https://translate.google.com/translate?sl=auto&tl=tr&u=${encodeURIComponent(url)}`;
+}
+
+function getSendSettings() {
+  return {
+    bulletinTitle: $('#sendBulletinTitle').value.trim() || 'RSS Bulteni',
+    bulletinDate: $('#sendBulletinDate').value.trim(),
+    introText: $('#sendIntro').value.trim(),
+    mailSubject: $('#sendSubject').value.trim() || $('#sendBulletinTitle').value.trim() || 'RSS Bulteni',
+    mailFrom: $('#sendFrom').value.trim(),
+    layoutOrder: $('#settingLayout').value || 'global_first',
+    useTranslateLinks: $('#settingTranslate').value === 'true',
+    showLabels: $('#settingShowLabels').checked,
+    defaultImageUrl: $('#sendDefaultImage').value.trim(),
+    bannerImageUrl: $('#sendBannerImage').value.trim(),
+    bulletinStyle: getSelectedBulletinStyle()
+  };
+}
+
+function encodeMimeHeader(value) {
+  const text = String(value || '');
+  if (/^[\x00-\x7F]*$/.test(text)) return text;
+  return `=?UTF-8?B?${btoa(unescape(encodeURIComponent(text)))}?=`;
+}
+
+function categoryMeta(name) {
+  const category = state.categories.find((item) => item.name === name);
+  return {
+    color: category?.color || '#1a1a2e',
+    defaultImage: category?.default_image || category?.defaultImage || ''
+  };
+}
+
+function buildBulletinContent() {
+  const content = {
+    announcements: [],
+    trainings: [],
+    generalArticles: [],
+    articlesByCategory: {},
+    totalCount: state.selections.length
+  };
+  const seen = new Set();
+  for (const article of state.selections) {
+    if (seen.has(article.id)) continue;
+    seen.add(article.id);
+    const categories = article.categories || [];
+    const assigned = article.assigned_category || categories[0] || '';
+    const normalized = {
+      ...article,
+      title: article.turkish_title || article.title || '',
+      summary: article.turkish_summary || article.summary || '',
+      button_text: article.button_text || 'Devamini Oku ->'
+    };
+    if (assigned) {
+      if (!content.articlesByCategory[assigned]) content.articlesByCategory[assigned] = [];
+      content.articlesByCategory[assigned].push(normalized);
+    } else {
+      content.generalArticles.push(normalized);
+    }
+  }
+  return content;
+}
+
+function buttonHtml(url, text, color) {
+  const safeUrl = esc(url || '#');
+  const safeText = esc(text || 'Devamini Oku ->');
+  const safeColor = esc(color || '#001484');
+  return `<table border="0" cellspacing="0" cellpadding="0"><tr><td style="background-color:${safeColor};border-radius:4px;"><a href="${safeUrl}" target="_blank" style="display:inline-block;padding:7px 14px;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;font-size:11px;font-weight:600;text-decoration:none;">${safeText}</a></td></tr></table>`;
+}
+
+function labelHtml(label, color, settings, compact = false) {
+  if (!settings.showLabels || !label) return '';
+  return `<table border="0" cellspacing="0" cellpadding="0"><tr><td style="background-color:${esc(color)};padding:${compact ? '2px 8px' : '3px 10px'};border-radius:3px;"><span style="color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;font-size:${compact ? '9px' : '10px'};font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">${esc(label)}</span></td></tr></table>`;
+}
+
+function articleImage(item, fallback) {
+  return item.image_url || item.image || fallback || MAIL_SAFE_DEFAULT_IMAGE;
+}
+
+function singleNewsHtml(item, label, color, defaultImage, settings) {
+  const title = item.title || '';
+  const summary = item.source === 'Manuel Ekleme' ? (item.summary || '') : truncateText(item.summary || '', 150);
+  const url = wrapTranslateUrl(item.url || '#', item.language || 'tr', settings.useTranslateLinks);
+  const img = articleImage(item, defaultImage || settings.defaultImageUrl || MAIL_SAFE_DEFAULT_IMAGE);
+  return `<tr><td style="padding:0 40px 25px 40px;">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#ffffff;border:1px solid #e9ecef;border-radius:8px;overflow:hidden;">
+<tr>
+<td width="160" valign="top" style="padding:10px;"><a href="${esc(url)}" target="_blank"><img src="${esc(img)}" alt="${esc(title)}" width="140" height="90" style="display:block;width:140px;height:90px;object-fit:cover;border-radius:6px;border:0;"></a></td>
+<td valign="top" style="padding:12px 20px 12px 0;">
+${labelHtml(label, color, settings)}
+<h2 style="margin:10px 0 8px 0;color:#1a1a2e;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:600;line-height:1.3;">${esc(title)}</h2>
+<p style="margin:0 0 12px 0;color:#666666;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;line-height:1.5;">${esc(summary)}</p>
+${buttonHtml(url, item.button_text || 'Devamini Oku ->', '#001484')}
+</td></tr></table></td></tr>`;
+}
+
+function doubleCardHtml(item, label, color, defaultImage, settings) {
+  const title = item.title || '';
+  const summary = item.source === 'Manuel Ekleme' ? (item.summary || '') : truncateText(item.summary || '', 100);
+  const url = wrapTranslateUrl(item.url || '#', item.language || 'tr', settings.useTranslateLinks);
+  const img = articleImage(item, defaultImage || settings.defaultImageUrl || MAIL_SAFE_DEFAULT_IMAGE);
+  return `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#ffffff;border:1px solid #e9ecef;border-radius:8px;overflow:hidden;">
+<tr><td style="padding:0;height:150px;max-height:150px;overflow:hidden;line-height:0;font-size:0;">
+<a href="${esc(url)}" target="_blank" style="text-decoration:none;display:block;line-height:0;font-size:0;"><img src="${esc(img)}" alt="${esc(title)}" width="258" height="149" style="display:block;width:100%;height:150px;object-fit:cover;object-position:center;border:0;vertical-align:top;"></a>
+</td></tr>
+<tr><td style="padding:12px 14px;">
+${labelHtml(label, color, settings, true)}
+<h2 style="margin:8px 0 6px 0;color:#1a1a2e;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.3;"><a href="${esc(url)}" target="_blank" style="color:#1a1a2e;text-decoration:none;">${esc(title)}</a></h2>
+<p style="margin:0 0 10px 0;color:#666666;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;line-height:1.4;">${esc(summary)}</p>
+${buttonHtml(url, item.button_text || 'Devamini Oku ->', '#001484')}
+</td></tr></table>`;
+}
+
+function doubleRowsHtml(groups, settings) {
+  const flat = [];
+  for (const group of groups) {
+    for (const item of group.items) {
+      flat.push({ item, label: group.label, color: group.color, defaultImage: group.defaultImage });
+    }
+  }
+  let html = '';
+  for (let i = 0; i < flat.length; i += 2) {
+    const left = doubleCardHtml(flat[i].item, flat[i].label, flat[i].color, flat[i].defaultImage, settings);
+    const right = flat[i + 1] ? doubleCardHtml(flat[i + 1].item, flat[i + 1].label, flat[i + 1].color, flat[i + 1].defaultImage, settings) : '&nbsp;';
+    html += `<tr><td style="padding:0 15px 20px 15px;">
+<div style="display:inline-block;width:100%;max-width:270px;vertical-align:top;">
+<table width="270" border="0" cellspacing="0" cellpadding="0"><tr><td style="padding:0 5px;">${left}</td></tr></table>
+</div>
+<div style="display:inline-block;width:100%;max-width:270px;vertical-align:top;">
+<table width="270" border="0" cellspacing="0" cellpadding="0"><tr><td style="padding:0 5px;">${right}</td></tr></table>
+</div>
+</td></tr>`;
+  }
+  return html;
+}
+
+function newsGroups(content, settings) {
+  const categoryGroups = Object.entries(content.articlesByCategory).map(([name, items]) => {
+    const meta = categoryMeta(name);
+    return {
+      items,
+      label: name,
+      color: meta.color,
+      defaultImage: meta.defaultImage || settings.defaultImageUrl || MAIL_SAFE_DEFAULT_IMAGE
+    };
+  });
+  const generalGroups = content.generalArticles.length ? [{
+    items: content.generalArticles,
+    label: '',
+    color: '#475569',
+    defaultImage: settings.defaultImageUrl || MAIL_SAFE_DEFAULT_IMAGE
+  }] : [];
+  return { categoryGroups, generalGroups };
+}
+
 function buildBulletinHtml() {
-  const title = esc($('#bulletinTitle').value || 'TA RSS Bulteni');
-  const intro = esc($('#introText').value || '');
-  const items = state.selections.map((article) => `
-    <tr>
-      <td style="padding:16px 0;border-bottom:1px solid #e5e7eb">
-        <h2 style="font-family:Arial,sans-serif;font-size:18px;line-height:1.3;margin:0 0 6px;color:#0f1f4a">${esc(article.turkish_title || article.title)}</h2>
-        <p style="font-family:Arial,sans-serif;font-size:13px;line-height:1.55;margin:0 0 10px;color:#63718a">${esc(article.turkish_summary || article.summary || '')}</p>
-        <a href="${esc(article.url)}" style="font-family:Arial,sans-serif;color:#1c3a8c;font-size:13px;font-weight:bold">Detaylari incele</a>
-      </td>
-    </tr>
-  `).join('');
-  return `<!doctype html><html><body style="margin:0;background:#f3f6fb;padding:24px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><table role="presentation" width="680" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;padding:28px"><tr><td><h1 style="font-family:Arial,sans-serif;font-size:26px;margin:0 0 10px;color:#0f1f4a">${title}</h1><p style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#63718a;margin:0 0 18px">${intro}</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items || '<tr><td>Secili icerik yok.</td></tr>'}</table></td></tr></table></td></tr></table></body></html>`;
+  const settings = getSendSettings();
+  const content = buildBulletinContent();
+  const today = formatBulletinDate(settings.bulletinDate);
+  const banner = settings.bannerImageUrl
+    ? `<tr><td align="center" style="padding:0;line-height:0;font-size:0;"><img src="${esc(settings.bannerImageUrl)}" alt="" width="600" style="display:block;width:600px;height:auto;max-width:100%;border:0;"></td></tr>`
+    : '';
+  let rows = '';
+  const { categoryGroups, generalGroups } = newsGroups(content, settings);
+  if (settings.bulletinStyle === 'double') {
+    const groups = settings.layoutOrder === 'category_first'
+      ? [...categoryGroups, ...generalGroups]
+      : [...generalGroups, ...categoryGroups];
+    rows += doubleRowsHtml(groups, settings);
+  } else {
+    const ordered = settings.layoutOrder === 'category_first'
+      ? [...categoryGroups, ...generalGroups]
+      : [...generalGroups, ...categoryGroups];
+    for (const group of ordered) {
+      for (const item of group.items) {
+        rows += singleNewsHtml(item, group.label, group.color, group.defaultImage, settings);
+      }
+    }
+  }
+  if (!content.totalCount) {
+    rows = '<tr><td style="padding:40px;text-align:center;"><p style="color:#666;font-family:\'Segoe UI\',Arial,sans-serif;font-size:14px;">Bu hafta secili icerik bulunamadi.</p></td></tr>';
+  }
+  return `<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(settings.bulletinTitle)} - ${esc(today)}</title>
+<style type="text/css">body,table,td,p,a,li{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}table,td{mso-table-lspace:0pt;mso-table-rspace:0pt}img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none}</style>
+</head>
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff">
+<tr><td align="center" style="padding:20px 10px;">
+<table width="600" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
+${banner}
+<tr><td bgcolor="#1a1a2e" align="center" style="padding:${settings.bannerImageUrl ? '20px 40px 15px 40px' : '30px 40px'};">
+<h1 style="margin:0;color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;font-size:28px;font-weight:700;letter-spacing:2px;">${esc(settings.bulletinTitle)}</h1>
+<p style="margin:8px 0 0 0;color:#a0a0a0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1px;">${esc(today)}</p>
+</td></tr>
+<tr><td style="padding:30px 40px 20px 40px;">
+<p style="margin:0;color:#333333;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.6;">Merhaba,</p>
+<p style="margin:12px 0 0 0;color:#666666;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.6;">${esc(settings.introText)}</p>
+</td></tr>
+${rows}
+<tr><td bgcolor="#f8f9fa" style="padding:25px 40px;border-top:1px solid #e9ecef;">
+<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr><td align="center">
+<p style="margin:8px 0 0 0;color:#bbbbbb;font-family:'Segoe UI',Arial,sans-serif;font-size:11px;">TA Akademi</p>
+</td></tr></table></td></tr>
+</table></td></tr></table></body></html>`;
 }
 
 async function saveSettings() {
+  const settings = getSendSettings();
   await putItem('settings', {
     id: 'app',
-    bulletinTitle: $('#bulletinTitle').value,
-    mailSubject: $('#mailSubject').value,
-    introText: $('#introText').value,
+    bulletinTitle: settings.bulletinTitle,
+    bulletinDate: settings.bulletinDate,
+    mailSubject: settings.mailSubject,
+    mailFrom: settings.mailFrom,
+    introText: settings.introText,
+    layoutOrder: settings.layoutOrder,
+    useTranslateLinks: settings.useTranslateLinks,
+    showLabels: settings.showLabels,
+    defaultImageUrl: settings.defaultImageUrl,
+    bannerImageUrl: settings.bannerImageUrl,
+    bulletinStyle: settings.bulletinStyle,
     updatedAt: new Date().toISOString()
   });
 }
@@ -659,19 +933,24 @@ async function previewBulletin() {
 }
 
 function downloadEmlContent() {
-  const subject = $('#mailSubject').value || $('#bulletinTitle').value || 'TA RSS Bulteni';
+  const settings = getSendSettings();
+  const subject = settings.mailSubject || settings.bulletinTitle || 'RSS Bulteni';
   const html = buildBulletinHtml();
   const boundary = `----=_TA_RSS_${Date.now()}`;
-  const eml = [
-    `Subject: ${subject}`,
+  const headers = [
+    `Subject: ${encodeMimeHeader(subject)}`,
+    ...(settings.mailFrom ? [`From: ${settings.mailFrom}`] : []),
     'MIME-Version: 1.0',
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`
+  ];
+  const eml = [
+    ...headers,
     '',
     `--${boundary}`,
     'Content-Type: text/plain; charset=utf-8',
     'Content-Transfer-Encoding: 8bit',
     '',
-    state.selections.map((article) => `${article.turkish_title || article.title}\n${article.url}`).join('\n\n'),
+    `${settings.bulletinTitle}\n${settings.introText}\n\n${state.selections.map((article) => `${article.turkish_title || article.title}\n${article.url}`).join('\n\n')}`,
     '',
     `--${boundary}`,
     'Content-Type: text/html; charset=utf-8',
@@ -806,6 +1085,25 @@ $('#previewBulletin')?.addEventListener('click', previewBulletin);
 $('#downloadEml')?.addEventListener('click', async () => {
   await saveSettings();
   downloadEmlContent();
+});
+$('#saveSendSettings')?.addEventListener('click', async () => {
+  await saveSettings();
+  $('#sendSettingsSaved').style.display = 'inline';
+  setTimeout(() => { $('#sendSettingsSaved').style.display = 'none'; }, 1600);
+  toast('Bulten ayarlari kaydedildi.', 'success');
+});
+$('#sendDefaultImage')?.addEventListener('input', updateDefaultImagePreview);
+$('#sendBannerImage')?.addEventListener('input', updateBannerPreview);
+$('#clearDefaultImage')?.addEventListener('click', () => {
+  $('#sendDefaultImage').value = '';
+  updateDefaultImagePreview();
+});
+$('#clearBannerImage')?.addEventListener('click', () => {
+  $('#sendBannerImage').value = '';
+  updateBannerPreview();
+});
+$$('[data-style-option]').forEach((option) => {
+  option.addEventListener('click', () => selectBulletinStyle(option.dataset.styleOption));
 });
 $('#closeArticleEdit')?.addEventListener('click', closeArticleEditor);
 $('#cancelArticleEdit')?.addEventListener('click', closeArticleEditor);

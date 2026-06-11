@@ -265,24 +265,136 @@
 
         <section class="page" id="page-send">
           <article class="card">
-            <h3>Bulten Ayarlari ve EML Ciktisi</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Bulten Basligi</label>
-                <input id="bulletinTitle" value="TA RSS Bulteni">
+            <h3>Bulten ve Mail Ayarlari</h3>
+            <div class="settings-grid">
+              <div>
+                <section class="settings-section">
+                  <h4>Bulten Ayarlari</h4>
+                  <p>Alicilarin mail icinde gorecegi bulten basligi, tarih, giris metni ve kart gorunumu.</p>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Bulten Basligi</label>
+                      <input id="sendBulletinTitle" value="RSS Bulteni" placeholder="Bulten basligi">
+                    </div>
+                    <div class="form-group">
+                      <label>Bulten Tarihi</label>
+                      <input id="sendBulletinDate" value="" placeholder="Orn: 14 Nisan 2026 (bos = otomatik)">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Giris Metni</label>
+                    <textarea id="sendIntro" rows="2">Sana ozel hazirlanan secilmis icerikler ve haftanin one cikan gelismeleri asagida seni bekliyor.</textarea>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Siralama</label>
+                      <select id="settingLayout">
+                        <option value="global_first">Genel Icerik Once</option>
+                        <option value="category_first">Kategori Haberleri Once</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Google Translate Linkleri</label>
+                      <select id="settingTranslate">
+                        <option value="false">Kapali</option>
+                        <option value="true">Acik (Ingilizce icerikler)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <label class="check-line">
+                    <input type="checkbox" id="settingShowLabels" checked>
+                    <span>Kategori Etiketlerini Goster</span>
+                  </label>
+                </section>
+
+                <section class="settings-section">
+                  <h4>Gorsel ve Sablon</h4>
+                  <p>Haber gorselleri, istege bagli banner ve bultenin kolon yerlesimi.</p>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Varsayilan Haber Gorseli (URL)</label>
+                      <div class="visual-input-row">
+                        <input id="sendDefaultImage" value="" placeholder="Gorseli olmayan haberler icin resim URL'si">
+                        <button class="btn btn-sm btn-red" id="clearDefaultImage" type="button">Temizle</button>
+                      </div>
+                      <div id="defaultImagePreview" class="image-preview" style="display:none"><img id="defaultImagePreviewImg" alt=""></div>
+                    </div>
+                    <div class="form-group">
+                      <label>Banner Gorseli (istege bagli)</label>
+                      <div class="visual-input-row">
+                        <input id="sendBannerImage" placeholder="Bulten ustune banner gorseli URL'si">
+                        <button class="btn btn-sm btn-red" id="clearBannerImage" type="button">Kaldir</button>
+                      </div>
+                      <div id="bannerPreview" class="image-preview" style="display:none"><img id="bannerPreviewImg" alt=""></div>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Bulten Stili</label>
+                    <div class="style-options">
+                      <label class="style-option active" data-style-option="single">
+                        <input type="radio" name="bulletinStyle" value="single" checked>
+                        <svg width="120" height="80" viewBox="0 0 120 80" aria-hidden="true">
+                          <rect x="5" y="0" width="110" height="16" rx="3" fill="#1a1a2e"/>
+                          <rect x="5" y="20" width="25" height="18" rx="3" fill="#1c3a8c" opacity="0.3"/>
+                          <rect x="34" y="20" width="81" height="5" rx="2" fill="#63718a" opacity="0.4"/>
+                          <rect x="34" y="28" width="60" height="3" rx="1" fill="#63718a" opacity="0.2"/>
+                          <rect x="34" y="33" width="30" height="3" rx="1" fill="#1c3a8c" opacity="0.4"/>
+                          <rect x="5" y="42" width="25" height="18" rx="3" fill="#1c3a8c" opacity="0.3"/>
+                          <rect x="34" y="42" width="81" height="5" rx="2" fill="#63718a" opacity="0.4"/>
+                          <rect x="34" y="50" width="55" height="3" rx="1" fill="#63718a" opacity="0.2"/>
+                          <rect x="34" y="55" width="30" height="3" rx="1" fill="#1c3a8c" opacity="0.4"/>
+                        </svg>
+                        <span>Stil 1 - Tek Kolon</span>
+                        <small>Klasik liste gorunumu</small>
+                      </label>
+                      <label class="style-option" data-style-option="double">
+                        <input type="radio" name="bulletinStyle" value="double">
+                        <svg width="120" height="80" viewBox="0 0 120 80" aria-hidden="true">
+                          <rect x="5" y="0" width="110" height="16" rx="3" fill="#1a1a2e"/>
+                          <rect x="5" y="20" width="52" height="28" rx="3" fill="#1c3a8c" opacity="0.3"/>
+                          <rect x="63" y="20" width="52" height="28" rx="3" fill="#1c3a8c" opacity="0.3"/>
+                          <rect x="7" y="50" width="48" height="4" rx="1" fill="#63718a" opacity="0.5"/>
+                          <rect x="7" y="56" width="35" height="3" rx="1" fill="#63718a" opacity="0.25"/>
+                          <rect x="65" y="50" width="48" height="4" rx="1" fill="#63718a" opacity="0.5"/>
+                          <rect x="65" y="56" width="35" height="3" rx="1" fill="#63718a" opacity="0.25"/>
+                        </svg>
+                        <span>Stil 2 - Cift Kolon</span>
+                        <small>Yan yana kart gorunumu</small>
+                      </label>
+                    </div>
+                  </div>
+                </section>
               </div>
-              <div class="form-group">
-                <label>Mail Konusu</label>
-                <input id="mailSubject" value="TA RSS Bulteni">
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Giris Metni</label>
-              <textarea id="introText" rows="3">Secilmis icerikler ve haftanin one cikan gelismeleri asagida seni bekliyor.</textarea>
-            </div>
-            <div class="form-actions">
-              <button class="btn btn-primary" id="previewBulletin" type="button">Onizleme Olustur</button>
-              <button class="btn btn-green" id="downloadEml" type="button">EML Indir</button>
+
+              <aside class="settings-side">
+                <section class="settings-section">
+                  <h4>Mail Ayarlari</h4>
+                  <p>EML dosyasinin konusu ve opsiyonel gonderen bilgisi.</p>
+                  <div class="form-group">
+                    <label>Mail Konusu</label>
+                    <input id="sendSubject" value="RSS Bulteni">
+                  </div>
+                  <div class="form-group">
+                    <label>Gonderen (opsiyonel)</label>
+                    <input id="sendFrom" placeholder="ad.soyad@example.com">
+                  </div>
+                </section>
+
+                <section class="settings-section">
+                  <h4>EML Ciktisi</h4>
+                  <p>Secilen iceriklerden orijinal TA RSS mail sablonu ile tek EML dosyasi olusturur.</p>
+                  <div class="mail-actions">
+                    <button class="btn btn-primary" id="previewBulletin" type="button">Onizleme Olustur</button>
+                    <button class="btn btn-green" id="downloadEml" type="button">EML Indir</button>
+                  </div>
+                </section>
+
+                <div class="settings-actions">
+                  <button class="btn btn-green" id="saveSendSettings" type="button">Ayarlari Kaydet</button>
+                  <span id="sendSettingsSaved" style="font-size:12px;color:var(--green);display:none">Kaydedildi</span>
+                </div>
+              </aside>
             </div>
           </article>
           <article class="card">

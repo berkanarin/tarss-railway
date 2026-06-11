@@ -7,44 +7,135 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <main class="app-shell">
-    <section class="workspace">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">TA RSS</p>
-          <h1>Railway Version</h1>
-        </div>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <h2>TA RSS</h2>
+        <small>Railway Version</small>
+      </div>
+      <nav aria-label="Ana navigasyon">
+        <button class="active" type="button" data-page="dashboard"><span class="icon">01</span>Dashboard</button>
+        <button type="button" data-page="sources"><span class="icon">02</span>RSS Kaynaklari</button>
+        <button type="button" data-page="data"><span class="icon">03</span>Veri Yonetimi</button>
+      </nav>
+      <div class="status-bar">
         <div class="status-pill" id="healthStatus">Kontrol ediliyor</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="toolbar">
+        <div>
+          <strong id="pageTitle">Dashboard</strong>
+          <span class="toolbar-sub">IndexedDB tabanli lokal calisma alani</span>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-ghost" id="checkHealth" type="button">Health Check</button>
+        <button class="btn btn-primary" id="exportData" type="button">Yedek Al</button>
       </header>
 
-      <section class="summary">
-        <div>
-          <h2>Browser-first bulten uretimi</h2>
-          <p>Bu iskelet, IndexedDB merkezli RSS bulten aracinin Railway uzerinde yayinlanacak yeni surumu icin baslangic ekranidir.</p>
-        </div>
-        <button id="checkHealth" type="button">Health Check</button>
-      </section>
+      <section class="content">
+        <section class="page active" id="page-dashboard">
+          <div class="stats-row">
+            <article class="stat-card">
+              <div class="value" id="statSources">0</div>
+              <div class="label">RSS Kaynagi</div>
+            </article>
+            <article class="stat-card green">
+              <div class="value" id="statCategories">0</div>
+              <div class="label">Kategori</div>
+            </article>
+            <article class="stat-card orange">
+              <div class="value" id="statArticles">0</div>
+              <div class="label">Haber</div>
+            </article>
+            <article class="stat-card red">
+              <div class="value" id="statSelections">0</div>
+              <div class="label">Secim</div>
+            </article>
+          </div>
 
-      <section class="grid" aria-label="Planlanan ana moduller">
-        <article>
-          <h3>IndexedDB</h3>
-          <p>RSS kaynaklari, ayarlar, skor cache'i ve secimler tarayicida saklanacak.</p>
-        </article>
-        <article>
-          <h3>RSS Proxy</h3>
-          <p>Railway backend CORS engelli RSS kaynaklarini cekmek icin araci olacak.</p>
-        </article>
-        <article>
-          <h3>AI Proxy</h3>
-          <p>API key frontend'e yazilmadan haber skorlama backend uzerinden yapilacak.</p>
-        </article>
-        <article>
-          <h3>EML Export</h3>
-          <p>Secilen haberlerden tek bir EML dosyasi tarayicida uretilecek.</p>
-        </article>
+          <article class="card">
+            <h3>Yeni Surum Plani</h3>
+            <div class="timeline">
+              <div class="timeline-row done"><span></span><div><strong>Faz 1</strong><p>Railway app iskeleti ve GitHub auto deploy hazir.</p></div></div>
+              <div class="timeline-row active"><span></span><div><strong>Faz 2</strong><p>Tarayicida IndexedDB veri katmani kuruluyor.</p></div></div>
+              <div class="timeline-row"><span></span><div><strong>Faz 3</strong><p>RSS proxy ile kaynaklardan haber cekme eklenecek.</p></div></div>
+              <div class="timeline-row"><span></span><div><strong>Faz 4</strong><p>AI skorlama proxy ve skor cache devreye alinacak.</p></div></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="page" id="page-sources">
+          <article class="card">
+            <h3>RSS Kaynagi Ekle</h3>
+            <form class="source-form" id="sourceForm">
+              <div class="form-row">
+                <label>
+                  Kaynak Adi
+                  <input id="sourceName" required placeholder="Orn. Webrazzi">
+                </label>
+                <label>
+                  Kategori
+                  <input id="sourceCategory" placeholder="Orn. tech">
+                </label>
+              </div>
+              <label>
+                RSS URL
+                <input id="sourceUrl" required type="url" placeholder="https://example.com/feed/">
+              </label>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Kaydet</button>
+                <button class="btn btn-ghost" id="clearSourceForm" type="button">Temizle</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>Kayitli RSS Kaynaklari</h3>
+              <span id="sourceCount">0 kaynak</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Kaynak</th>
+                    <th>Kategori</th>
+                    <th>URL</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="sourcesTable"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="sourcesEmpty">Henuz RSS kaynagi eklenmedi.</div>
+          </article>
+        </section>
+
+        <section class="page" id="page-data">
+          <article class="card">
+            <h3>Yedekleme</h3>
+            <p>Tarayicidaki IndexedDB verilerini JSON olarak disa aktarabilir veya daha once aldiginiz yedegi geri yukleyebilirsiniz.</p>
+            <div class="form-actions">
+              <button class="btn btn-primary" id="exportDataSecondary" type="button">JSON Yedek Al</button>
+              <label class="file-button">
+                JSON Yedek Yukle
+                <input id="importData" type="file" accept="application/json,.json">
+              </label>
+            </div>
+          </article>
+
+          <article class="card danger-card">
+            <h3>Veri Sifirlama</h3>
+            <p>Bu islem tarayicidaki RSS kaynaklari, haberler, secimler ve skor cache dahil lokal veriyi temizler.</p>
+            <button class="btn btn-red" id="resetData" type="button">Lokal Veriyi Sifirla</button>
+          </article>
+        </section>
       </section>
-    </section>
-  </main>
+    </main>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
   <script src="/app.js" type="module"></script>
 </body>
 </html>

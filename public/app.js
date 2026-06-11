@@ -10,9 +10,15 @@ import {
 
 const statusEl = document.querySelector('#healthStatus');
 const checkButton = document.querySelector('#checkHealth');
-const pageTitle = document.querySelector('#pageTitle');
 const navButtons = document.querySelectorAll('[data-page]');
 const pages = document.querySelectorAll('.page');
+const workflowModal = document.querySelector('#workflowModal');
+const workflowModalStep = document.querySelector('#workflowModalStep');
+const workflowModalTitle = document.querySelector('#workflowModalTitle');
+const workflowModalDesc = document.querySelector('#workflowModalDesc');
+const workflowModalBody = document.querySelector('#workflowModalBody');
+const workflowModalTabs = document.querySelector('#workflowModalTabs');
+const workflowModalActions = document.querySelector('#workflowModalActions');
 const sourceForm = document.querySelector('#sourceForm');
 const sourceName = document.querySelector('#sourceName');
 const sourceCategory = document.querySelector('#sourceCategory');
@@ -24,13 +30,44 @@ const importInput = document.querySelector('#importData');
 const toastContainer = document.querySelector('#toastContainer');
 
 const stats = {
-  sources: document.querySelector('#statSources'),
-  categories: document.querySelector('#statCategories'),
-  articles: document.querySelector('#statArticles'),
-  selections: document.querySelector('#statSelections')
+  sources: null,
+  categories: null,
+  articles: null,
+  selections: null
 };
 
 let editingSourceId = null;
+
+const workflowConfig = {
+  sources: {
+    step: '2. Adim',
+    title: 'RSS Kaynaklarini Duzenle',
+    desc: 'RSS kaynaklarini duzenleyin ve Railway RSS proxy icin kaynak listenizi hazirlayin.',
+    pages: [{ id: 'sources', label: 'RSS Kaynaklari' }],
+    actions: ''
+  },
+  data: {
+    step: '1. Adim',
+    title: 'Kategorileri Duzenle',
+    desc: 'Bu fazda lokal veri, yedekleme ve ileride kategori ayarlarina baglanacak veri alani hazirlaniyor.',
+    pages: [{ id: 'data', label: 'Veri Yonetimi' }],
+    actions: ''
+  },
+  articles: {
+    step: '3. Adim',
+    title: 'RSS Haberlerini Sec',
+    desc: 'Haber cekme, AI skorlama ve secim akisi sonraki fazlarda bu alana eklenecek.',
+    pages: [{ id: 'articles', label: 'RSS Haberleri' }],
+    actions: 'articleFlow'
+  },
+  send: {
+    step: '4. Adim',
+    title: 'EML Ciktisi Olustur',
+    desc: 'Bulten onizleme ve tek EML dosyasi uretimi sonraki fazda bu alana eklenecek.',
+    pages: [{ id: 'send', label: 'EML Ciktisi' }],
+    actions: ''
+  }
+};
 
 function makeId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -55,6 +92,9 @@ function toast(message, type = 'info') {
 }
 
 async function checkHealth() {
+  if (!statusEl) {
+    return;
+  }
   statusEl.textContent = 'Kontrol ediliyor';
   statusEl.classList.remove('ok', 'error');
 
@@ -79,8 +119,6 @@ function showPage(pageName) {
   pages.forEach((page) => {
     page.classList.toggle('active', page.id === `page-${pageName}`);
   });
-  const activeButton = document.querySelector(`[data-page="${pageName}"]`);
-  pageTitle.textContent = activeButton ? activeButton.textContent.replace(/^\d+/, '').trim() : 'Dashboard';
 }
 
 async function renderStats() {
@@ -91,10 +129,14 @@ async function renderStats() {
     getAll('selections')
   ]);
 
-  stats.sources.textContent = sources.length;
-  stats.categories.textContent = categories.length;
-  stats.articles.textContent = articles.length;
-  stats.selections.textContent = selections.length;
+  const summary = document.querySelector('#workflowSummary');
+  if (summary) {
+    summary.textContent = `${sources.length} kaynak, ${articles.length} haber, ${selections.length} secili icerik. Pipeline: local.`;
+  }
+
+  document.querySelector('[data-step-card="1"]')?.classList.toggle('completed', categories.length > 0);
+  document.querySelector('[data-step-card="2"]')?.classList.toggle('completed', sources.length > 0);
+  document.querySelector('[data-step-card="3"]')?.classList.toggle('completed', selections.length > 0);
 }
 
 async function renderSources() {
@@ -113,6 +155,78 @@ async function renderSources() {
       </td>
     </tr>
   `).join('');
+}
+
+function buildWorkflowActions(type) {
+  if (type !== 'articleFlow') {
+    return '';
+  }
+  return '<div class="rss-action-strip">' +
+    '<label title="Her RSS kaynagindan cekilecek maksimum haber sayisi">Kaynak basi ' +
+      '<select disabled><option selected>50</option></select>' +
+    '</label>' +
+    '<button class="btn btn-primary" type="button" disabled>RSS Cek</button>' +
+    '<button class="btn btn-orange" type="button" disabled>AI Skorla</button>' +
+    '<button class="btn btn-green" type="button" disabled>Secimi Kaydet</button>' +
+  '</div>';
+}
+
+function returnWorkflowPagesToContent() {
+  if (!workflowModalBody) {
+    return;
+  }
+  const content = document.querySelector('.content');
+  const footer = content?.querySelector('.app-footer');
+  Array.from(workflowModalBody.children).forEach((el) => {
+    if (!el.classList?.contains('page')) {
+      return;
+    }
+    el.classList.remove('active');
+    if (footer) {
+      content.insertBefore(el, footer);
+    } else {
+      content.appendChild(el);
+    }
+  });
+}
+
+function openWorkflowModal(kind) {
+  const cfg = workflowConfig[kind];
+  if (!cfg || !workflowModal) {
+    return;
+  }
+
+  returnWorkflowPagesToContent();
+  pages.forEach((page) => page.classList.remove('active'));
+  document.querySelector('#page-dashboard')?.classList.add('active');
+
+  workflowModalStep.textContent = cfg.step;
+  workflowModalTitle.textContent = cfg.title;
+  workflowModalDesc.textContent = cfg.desc;
+  workflowModalActions.innerHTML = buildWorkflowActions(cfg.actions);
+  workflowModalTabs.innerHTML = cfg.pages.map((page, index) =>
+    `<button type="button" class="${index === 0 ? 'active' : ''}" data-workflow-tab="${page.id}">${page.label}</button>`
+  ).join('');
+  workflowModalBody.innerHTML = '';
+
+  cfg.pages.forEach((page, index) => {
+    const el = document.querySelector(`#page-${page.id}`);
+    if (!el) {
+      return;
+    }
+    workflowModalBody.appendChild(el);
+    el.classList.toggle('active', index === 0);
+  });
+
+  workflowModal.classList.add('show');
+  workflowModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeWorkflowModal() {
+  returnWorkflowPagesToContent();
+  workflowModal?.classList.remove('show');
+  workflowModal?.setAttribute('aria-hidden', 'true');
+  showPage('dashboard');
 }
 
 function clearSourceForm() {
@@ -233,12 +347,37 @@ navButtons.forEach((button) => {
   button.addEventListener('click', () => showPage(button.dataset.page));
 });
 
-checkButton.addEventListener('click', checkHealth);
+document.querySelectorAll('[data-open-page]').forEach((button) => {
+  button.addEventListener('click', () => openWorkflowModal(button.dataset.openPage));
+});
+
+workflowModalTabs?.addEventListener('click', (event) => {
+  const pageId = event.target.dataset?.workflowTab;
+  if (!pageId) {
+    return;
+  }
+  workflowModalTabs.querySelectorAll('button').forEach((button) => {
+    button.classList.toggle('active', button.dataset.workflowTab === pageId);
+  });
+  workflowModalBody.querySelectorAll('.page').forEach((page) => {
+    page.classList.toggle('active', page.id === `page-${pageId}`);
+  });
+});
+
+document.querySelector('#closeWorkflowModal')?.addEventListener('click', closeWorkflowModal);
+workflowModal?.addEventListener('click', (event) => {
+  if (event.target === workflowModal) {
+    closeWorkflowModal();
+  }
+});
+
+checkButton?.addEventListener('click', checkHealth);
 sourceForm.addEventListener('submit', saveSource);
 document.querySelector('#clearSourceForm').addEventListener('click', clearSourceForm);
-document.querySelector('#exportData').addEventListener('click', downloadBackup);
+document.querySelector('#exportData')?.addEventListener('click', downloadBackup);
 document.querySelector('#exportDataSecondary').addEventListener('click', downloadBackup);
 document.querySelector('#resetData').addEventListener('click', handleReset);
+document.querySelector('#resetDataTop')?.addEventListener('click', handleReset);
 importInput.addEventListener('change', handleImport);
 
 await seedDefaults();

@@ -8,62 +8,94 @@
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
-      <div class="logo">
-        <h2>TA RSS</h2>
-        <small>Railway Version</small>
+    <header class="topbar">
+      <button class="icon-btn primary" type="button" data-page="dashboard" title="Ana akisa don" aria-label="Ana akisa don">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg>
+      </button>
+      <div class="topbar-context">
+        <div class="topbar-kicker">TA</div>
+        <div class="topbar-title">RSS Bulten Yoneticisi</div>
       </div>
-      <nav aria-label="Ana navigasyon">
-        <button class="active" type="button" data-page="dashboard"><span class="icon">01</span>Dashboard</button>
-        <button type="button" data-page="sources"><span class="icon">02</span>RSS Kaynaklari</button>
-        <button type="button" data-page="data"><span class="icon">03</span>Veri Yonetimi</button>
-      </nav>
-      <div class="status-bar">
-        <div class="status-pill" id="healthStatus">Kontrol ediliyor</div>
+      <div class="topbar-actions">
+        <button class="icon-btn danger" id="resetDataTop" type="button" title="Lokal veriyi sifirla" aria-label="Lokal veriyi sifirla">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v6h6"></path></svg>
+        </button>
+        <button class="icon-btn" data-open-page="send" type="button" title="EML ciktisi" aria-label="EML ciktisi">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path><path d="M15 18l5-5"></path><path d="m17 13 3 3"></path></svg>
+        </button>
+        <button class="icon-btn" data-open-page="data" type="button" title="Veri yonetimi" aria-label="Veri yonetimi">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8"></path><path d="M8 17v-4"></path><path d="M12 17v-7"></path><path d="M16 17v-2"></path></svg>
+        </button>
       </div>
-    </aside>
+    </header>
+
+    <div class="sidebar" aria-hidden="true">
+      <div id="pipelineStatus"></div>
+    </div>
 
     <main class="main">
-      <header class="toolbar">
-        <div>
-          <strong id="pageTitle">Dashboard</strong>
-          <span class="toolbar-sub">IndexedDB tabanli lokal calisma alani</span>
-        </div>
-        <div class="spacer"></div>
-        <button class="btn btn-ghost" id="checkHealth" type="button">Health Check</button>
-        <button class="btn btn-primary" id="exportData" type="button">Yedek Al</button>
-      </header>
+      <div class="toolbar" aria-hidden="true">
+        <span id="articleCount"></span>
+      </div>
 
       <section class="content">
         <section class="page active" id="page-dashboard">
-          <div class="stats-row">
-            <article class="stat-card">
-              <div class="value" id="statSources">0</div>
-              <div class="label">RSS Kaynagi</div>
-            </article>
-            <article class="stat-card green">
-              <div class="value" id="statCategories">0</div>
-              <div class="label">Kategori</div>
-            </article>
-            <article class="stat-card orange">
-              <div class="value" id="statArticles">0</div>
-              <div class="label">Haber</div>
-            </article>
-            <article class="stat-card red">
-              <div class="value" id="statSelections">0</div>
-              <div class="label">Secim</div>
-            </article>
-          </div>
+          <div class="workflow-home">
+            <section class="home-hero">
+              <div class="hero-copy">
+                <h1>RSS Bulten Operasyon Merkezi</h1>
+                <p>Kaynaklari guncelleyin, icerikleri degerlendirin, secimi netlestirin ve EML ciktisini tek bir kontrollu akista hazirlayin. TA bultenleri icin hizli, tutarli ve hatasiz bir hazirlik deneyimi.</p>
+              </div>
+              <div class="hero-digital" aria-hidden="true">
+                <svg viewBox="0 0 360 150" fill="none">
+                  <path class="grid-line" d="M24 28H336M24 74H336M24 120H336M74 16V134M168 16V134M262 16V134"></path>
+                  <path class="circuit" d="M106 50H138M224 75H252M65 72V104H138M224 52H292V78M181 28V52M181 98V120"></path>
+                  <path class="pulse" d="M36 50H138M224 75H324"></path>
+                  <path class="pulse two" d="M65 72V104H138M224 52H292V108H324"></path>
+                  <rect class="panel" x="24" y="28" width="82" height="44" rx="9"></rect>
+                  <rect class="panel" x="252" y="78" width="84" height="44" rx="9"></rect>
+                  <rect class="chip" x="138" y="52" width="86" height="46" rx="10"></rect>
+                  <path class="circuit" d="M154 68h54M154 82h34M40 44h30M40 58h48M268 94h38M268 108h26"></path>
+                </svg>
+              </div>
+            </section>
 
-          <article class="card">
-            <h3>Yeni Surum Plani</h3>
-            <div class="timeline">
-              <div class="timeline-row done"><span></span><div><strong>Faz 1</strong><p>Railway app iskeleti ve GitHub auto deploy hazir.</p></div></div>
-              <div class="timeline-row active"><span></span><div><strong>Faz 2</strong><p>Tarayicida IndexedDB veri katmani kuruluyor.</p></div></div>
-              <div class="timeline-row"><span></span><div><strong>Faz 3</strong><p>RSS proxy ile kaynaklardan haber cekme eklenecek.</p></div></div>
-              <div class="timeline-row"><span></span><div><strong>Faz 4</strong><p>AI skorlama proxy ve skor cache devreye alinacak.</p></div></div>
-            </div>
-          </article>
+            <section class="workflow-grid" aria-label="Bulten hazirlama adimlari">
+              <button class="workflow-card" data-open-page="data" data-step-card="1" type="button" title="Kategori, oncelik, anahtar kelime ve yedekleme ayarlarini duzenle">
+                <span class="step-check"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"></path></svg></span>
+                <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10"></path><path d="M4 12h16"></path><path d="M4 18h10"></path><circle cx="17" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="17" cy="18" r="2"></circle></svg></span>
+                <span class="step-eyebrow">1. Adim</span>
+                <h3>Kategorileri<br>Duzenle</h3>
+                <p>AI skorlama kategorilerini, oncelikleri, anahtar kelimeleri ve yedekleme ayarlarini yonet.</p>
+              </button>
+
+              <button class="workflow-card" data-open-page="sources" data-step-card="2" type="button" title="RSS kaynaklarini duzenle">
+                <span class="step-check"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"></path></svg></span>
+                <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2" fill="currentColor" stroke="none"></circle><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 5a15 15 0 0 1 15 15"></path></svg></span>
+                <span class="step-eyebrow">2. Adim</span>
+                <h3>RSS Kaynaklarini<br>Duzenle</h3>
+                <p>Kaynak listesini duzenle, kategorileri belirle ve Railway RSS proxy icin beslemeleri hazirla.</p>
+              </button>
+
+              <button class="workflow-card" data-open-page="articles" data-step-card="3" type="button" title="RSS haberlerini sec">
+                <span class="step-check"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"></path></svg></span>
+                <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 9h8"></path><path d="M8 13h5"></path><path d="m14.5 17 2 2 4-5"></path></svg></span>
+                <span class="step-eyebrow">3. Adim</span>
+                <h3>RSS Haberlerini<br>Sec</h3>
+                <p>Haberleri guncelle, AI ile skorla, filtrele ve bultene girecek icerikleri sec.</p>
+              </button>
+
+              <button class="workflow-card" data-open-page="send" data-step-card="4" type="button" title="EML ciktisi olustur">
+                <span class="step-check"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"></path></svg></span>
+                <span class="step-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3 10 14"></path><path d="m22 3-7 18-5-7-7-4 19-7z"></path><path d="M10 14v6l3-4"></path></svg></span>
+                <span class="step-eyebrow">4. Adim</span>
+                <h3>EML Ciktisi<br>Olustur</h3>
+                <p>Bulten basligi, gorseller, onizleme ve tek EML dosyasi uretimini tamamla.</p>
+              </button>
+            </section>
+
+            <p class="workflow-summary" id="workflowSummary">0 kaynak, 0 haber, 0 secili icerik. Pipeline: local.</p>
+          </div>
         </section>
 
         <section class="page" id="page-sources">
@@ -71,19 +103,19 @@
             <h3>RSS Kaynagi Ekle</h3>
             <form class="source-form" id="sourceForm">
               <div class="form-row">
-                <label>
-                  Kaynak Adi
+                <div class="form-group">
+                  <label>Kaynak Adi</label>
                   <input id="sourceName" required placeholder="Orn. Webrazzi">
-                </label>
-                <label>
-                  Kategori
+                </div>
+                <div class="form-group">
+                  <label>Kategori</label>
                   <input id="sourceCategory" placeholder="Orn. tech">
-                </label>
+                </div>
               </div>
-              <label>
-                RSS URL
+              <div class="form-group">
+                <label>RSS URL</label>
                 <input id="sourceUrl" required type="url" placeholder="https://example.com/feed/">
-              </label>
+              </div>
               <div class="form-actions">
                 <button class="btn btn-primary" type="submit">Kaydet</button>
                 <button class="btn btn-ghost" id="clearSourceForm" type="button">Temizle</button>
@@ -93,7 +125,7 @@
 
           <article class="card">
             <div class="card-head">
-              <h3>Kayitli RSS Kaynaklari</h3>
+              <h3>RSS Kaynaklari</h3>
               <span id="sourceCount">0 kaynak</span>
             </div>
             <div class="table-wrap">
@@ -110,6 +142,20 @@
               </table>
             </div>
             <div class="empty-state" id="sourcesEmpty">Henuz RSS kaynagi eklenmedi.</div>
+          </article>
+        </section>
+
+        <section class="page" id="page-articles">
+          <article class="card">
+            <h3>RSS Haberleri</h3>
+            <p>Bu alan Faz 3 ile Railway RSS proxy ve haber listesi icin doldurulacak.</p>
+          </article>
+        </section>
+
+        <section class="page" id="page-send">
+          <article class="card">
+            <h3>EML Ciktisi</h3>
+            <p>Bu alan Faz 6 ile tek EML dosyasi uretimi icin doldurulacak.</p>
           </article>
         </section>
 
@@ -132,9 +178,31 @@
             <button class="btn btn-red" id="resetData" type="button">Lokal Veriyi Sifirla</button>
           </article>
         </section>
+
+        <div class="app-footer">RSS Bulten Yoneticisi - Railway Version</div>
       </section>
     </main>
   </div>
+
+  <div class="workflow-modal" id="workflowModal" aria-hidden="true">
+    <div class="workflow-dialog" role="dialog" aria-modal="true" aria-labelledby="workflowModalTitle">
+      <div class="workflow-dialog-head">
+        <div class="workflow-dialog-title">
+          <span id="workflowModalStep">Adim</span>
+          <h2 id="workflowModalTitle">Calisma alani</h2>
+          <p id="workflowModalDesc"></p>
+        </div>
+        <div class="workflow-dialog-actions" id="workflowModalActions"></div>
+        <button class="panel-close" id="closeWorkflowModal" type="button" aria-label="Kapat">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <div class="workflow-fetch-line" id="workflowFetchLine"></div>
+      <div class="workflow-tabs" id="workflowModalTabs"></div>
+      <div class="workflow-modal-body" id="workflowModalBody"></div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
   <script src="/app.js" type="module"></script>
 </body>
